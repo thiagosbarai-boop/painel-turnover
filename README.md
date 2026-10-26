@@ -1,2 +1,2 @@
 # painel-turnover
-Painel de Turn Over da rede Estanplaza/Estanconfor
+Painel de Turn Over Estanplaza/Gran Estanplaza/Pulso/Estanconfor
