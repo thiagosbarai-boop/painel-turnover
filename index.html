@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Turn Over — Rede Estanplaza / Estanconfor</title><style>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Turn Over — Estanplaza / Gran Estanplaza / Estanconfor / Pulso</title><style>
 :root{--navy:#0D2D4E;--navy2:#16436e;--ink:#1f2a37;--muted:#6b7a8d;--line:#e3e8ef;--bg:#f6f8fb;--green:#2e9e5b;--greenbg:#e4f3e9;--amber:#d99a2b;--amberbg:#fbeed3;--red:#c0392b;--redbg:#f7ddda;}
 *{box-sizing:border-box} body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--ink)}
 header{background:linear-gradient(120deg,var(--navy),var(--navy2));color:#fff;padding:22px 28px}
@@ -41,8 +41,8 @@ table.hm td.cell{width:60px;height:38px;text-align:center;border-radius:6px;font
 .count{font-size:12px;color:var(--muted);margin-bottom:8px}
 @media(max-width:820px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
 </style></head><body>
-<header><h1>Turn Over — Rede Estanplaza / Estanconfor</h1>
-<p>Janeiro–agosto 2026 &nbsp;•&nbsp; (Pedido de Demissão + Desligamento) ÷ Quadro Orçado &nbsp;•&nbsp; versão anonimizada</p></header>
+<header><h1>Turn Over — Estanplaza / Gran Estanplaza / Estanconfor / Pulso</h1>
+<p>Janeiro–agosto 2026 &nbsp;•&nbsp; (Pedido de Demissão + Desligamento) ÷ Quadro Orçado</p></header>
 <div class="wrap">
   <div class="controls">
     <div class="ctl"><label>Grupo</label><select id="fGrupo"><option value="todos">Todos</option><option value="estanplaza">Estanplaza + Pulso</option><option value="estanconfor">Estanconfor</option></select></div>
@@ -61,7 +61,7 @@ table.hm td.cell{width:60px;height:38px;text-align:center;border-radius:6px;font
   <div class="card"><h2 id="tHMam">Mapa de calor — Área × Mês</h2><div class="sub" id="subHMam"></div><div style="overflow:auto"><table class="hm" id="hmam"></table></div><div class="note">Sazonalidade de cada área ao longo dos meses.</div></div>
   <div class="card"><h2 id="tHM">Mapa de calor — Área × Hotel</h2><div class="sub" id="subHM"></div><div style="overflow:auto"><table class="hm" id="hm"></table></div>
     <div class="hmleg"><b>Turn Over:</b><span class="swatch" style="background:#e4f3e9"></span>&lt;25%<span class="swatch" style="background:#fbeed3"></span>25–40%<span class="swatch" style="background:#f0b8b1"></span>40–60%<span class="swatch" style="background:#c0392b"></span>≥60% &nbsp;·&nbsp; <b>*</b> = base pequena (≤3 colab.), interpretar com cautela.</div></div>
-  <div class="card"><h2>Lista de saídas (com iniciais)</h2><div class="sub">Versão pública. Em vez do nome, as iniciais (primeiro nome + último sobrenome). O detalhamento nominal completo fica no Excel restrito.</div>
+  <div class="card"><h2>Lista de saídas</h2><div class="sub">Versão pública. Em vez do nome, as iniciais (primeiro nome + último sobrenome). O detalhamento nominal completo fica no Excel restrito.</div>
     <div class="listfilters">
       <select id="lHotel"><option value="">Todos os hotéis (do grupo)</option></select>
       <select id="lCat"><option value="conta">Só o que conta no Turn Over</option><option value="todos">Todos os eventos (inclui promoção/justa causa)</option></select>
@@ -148,7 +148,7 @@ function renderList(){
   });
   rows.sort((a,b)=>(a.mi-b.mi)||(a.hotel<b.hotel?-1:1));
   $('lCount').textContent=rows.length+' evento(s) listado(s)'+(cf==='conta'?' que contam no Turn Over':'');
-  let head='<tr><th>Hotel</th><th>Área</th><th>Iniciais</th><th>Cargo</th><th>Faixa</th><th>Tipo rescisão</th><th>Categoria</th></tr>';
+  let head='<tr><th>Hotel</th><th>Área</th><th>Nome (Iniciais)</th><th>Cargo</th><th>Faixa</th><th>Tipo rescisão</th><th>Categoria</th></tr>';
   let body=rows.map(e=>{let t=tagOf(e.rm);
     return `<tr><td style="font-weight:600">${short(e.hotel)}</td><td>${e.area}</td><td style="text-align:left">${e.ini||''}</td><td style="text-align:left">${e.cargo||''}</td><td>${faixa(e.rm)}</td><td style="text-align:left;font-size:11.5px">${e.tipo||''}</td><td><span class="tag ${t[0]}">${t[1]}</span></td></tr>`;}).join('');
   $('lst').innerHTML=head+body;
