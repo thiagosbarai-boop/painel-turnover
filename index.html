@@ -15,8 +15,8 @@ select,input[type=search]{border:1px solid var(--line);border-radius:8px;padding
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:20px}
 .card h2{margin:0 0 4px;font-size:15px;color:var(--navy)} .card .sub{font-size:11.5px;color:var(--muted);margin-bottom:12px}
-.bar-row{display:grid;grid-template-columns:150px 1fr 84px;align-items:center;gap:10px;margin:6px 0}
-.bar-row .name{font-size:12.5px;font-weight:600;text-align:right;color:var(--ink)}
+.bar-row{display:grid;grid-template-columns:215px 1fr 78px;align-items:center;gap:10px;margin:6px 0}
+.bar-row .name{font-size:11px;font-weight:600;text-align:right;color:var(--ink);line-height:1.15}
 .track{background:#eef2f7;border-radius:7px;height:20px;overflow:hidden} .fill{height:100%;border-radius:7px;transition:width .4s}
 .bar-row .pct{font-size:12.5px;font-weight:700;text-align:left}
 .msrow{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:end;height:190px;margin-top:6px}
@@ -31,7 +31,7 @@ td.hotel{font-weight:700;color:var(--navy)} tr.geral td{background:#f0f5fb}
 .note{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5}
 table.hm{border-collapse:separate;border-spacing:3px} table.hm th{position:static;background:transparent;color:var(--muted);font-size:10.5px;font-weight:700;padding:4px 6px}
 table.hm th.hcol{text-align:center;font-size:10px;font-weight:700;white-space:normal;line-height:1.15;vertical-align:bottom;padding:4px 3px;color:var(--muted)}
-table.hm td.h{text-align:right;font-size:12px;font-weight:700;color:var(--navy);white-space:nowrap;padding-right:10px}
+table.hm td.h{text-align:right;font-size:11px;font-weight:700;color:var(--navy);white-space:normal;max-width:170px;line-height:1.15;padding-right:10px}
 table.hm td.cell{width:60px;height:38px;text-align:center;border-radius:6px;font-size:12px;font-weight:700;cursor:default}
 .hmleg{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
 .swatch{width:16px;height:12px;border-radius:3px;display:inline-block}
@@ -39,7 +39,7 @@ table.hm td.cell{width:60px;height:38px;text-align:center;border-radius:6px;font
 .tag.deslig{background:#e7edf4;color:#2b4a6b}.tag.pedido{background:#eaf3ea;color:#2e6b3a}.tag.promo{background:#eee6f5;color:#6b3fa0}.tag.jc{background:#fbe6e2;color:#b23a2a}.tag.out{background:#eee;color:#666}
 .listfilters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .count{font-size:12px;color:var(--muted);margin-bottom:8px}
-@media(max-width:820px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.bar-row{grid-template-columns:140px 1fr 64px}}
 </style></head><body>
 <header><h1>Turn Over — Estanplaza / Gran Estanplaza / Estanconfor / Pulso</h1>
 <p>Janeiro–agosto 2026 &nbsp;•&nbsp; (Pedido de Demissão + Desligamento) ÷ Quadro Orçado</p></header>
@@ -64,10 +64,13 @@ table.hm td.cell{width:60px;height:38px;text-align:center;border-radius:6px;font
   <div class="card"><h2>Lista de saídas</h2><div class="sub">Versão pública. Em vez do nome, as iniciais (primeiro nome + último sobrenome). O detalhamento nominal completo fica no Excel restrito.</div>
     <div class="listfilters">
       <select id="lHotel"><option value="">Todos os hotéis (do grupo)</option></select>
-      <select id="lCat"><option value="conta">Só o que conta no Turn Over</option><option value="todos">Todos os eventos (inclui promoção/justa causa)</option></select>
+      <select id="lArea"><option value="">Todas as áreas</option></select>
+      <select id="lFaixa"><option value="">Todas as faixas</option><option value="Após 90d">Após 90 dias</option><option value="Antes 90d">Antes de 90 dias</option></select>
+      <select id="lTipo"><option value="">Todos os tipos de rescisão</option></select>
+      <select id="lCategoria"><option value="conta">Só o que conta no Turn Over</option><option value="todos">Todas as categorias</option><option value="Desligamento">Desligamento</option><option value="Pedido dem.">Pedido de demissão</option><option value="Promoção">Promoção</option><option value="Justa causa">Justa causa</option><option value="Outros">Outros</option></select>
       <input type="search" id="lBusca" placeholder="Buscar cargo / motivo / tipo...">
     </div>
-    <div class="sub" style="margin:-4px 0 10px">A lista acompanha os filtros de <b>Grupo</b>, <b>Área</b> e <b>Mês</b> do topo.</div>
+    <div class="sub" style="margin:-4px 0 10px">A lista acompanha os filtros de <b>Grupo</b> e <b>Mês</b> do topo; use os filtros acima para refinar.</div>
     <div class="count" id="lCount"></div>
     <div style="overflow:auto;max-height:560px"><table id="lst"></table></div></div>
 </div>
@@ -89,7 +92,7 @@ function fAcum(){return proj()?(12/NM):1;}
 function annF(){return mesSel()==='acum'?fAcum():fMonth();}
 function valN(d,rec){let m=mesSel();return m==='acum'?nOf(d,rec):mOf(d,rec,+m);}
 function rateM(d,rec){return d.hc?valN(d,rec)/d.hc*annF():null;}
-function short(n){return n.replace('ESTANPLAZA ','').replace('ESTANCONFOR ','').replace('GRAN ','');}
+function short(n){return n;}
 function cls(v){if(v==null)return '';if(v>=.40)return 'r';if(v>=.25)return 'a';return 'g';}
 function colr(v){if(v==null)return '#ccc';if(v>=.40)return '#c0392b';if(v>=.25)return '#d99a2b';return '#2e9e5b';}
 function hmcolor(v){if(v==null||v===0)return '#eef2f7';if(v>=.60)return '#c0392b';if(v>=.40)return '#f0b8b1';if(v>=.25)return '#fbeed3';return '#e4f3e9';}
@@ -133,27 +136,31 @@ function render(){
   renderList();
 }
 (function(){let hs=[...new Set(EV.filter(e=>e.hotel!=='MATRIZ/FORA').map(e=>e.hotel))].sort();hs.forEach(h=>{let o=document.createElement('option');o.value=h;o.textContent=h;$('lHotel').appendChild(o);});})();
+(function(){AREAS.forEach(a=>{let o=document.createElement('option');o.value=a;o.textContent=a;$('lArea').appendChild(o);});let ts=[...new Set(EV.map(e=>e.tipo).filter(Boolean))].sort();ts.forEach(t=>{let o=document.createElement('option');o.value=t;o.textContent=t;$('lTipo').appendChild(o);});})();
 function tagOf(rm){rm=rm||'';if(rm.includes('PROMO'))return['promo','Promoção'];if(rm.includes('JUSTA'))return['jc','Justa causa'];if(rm.includes('OUTROS'))return['out','Outros'];if(rm.includes('PEDIDO'))return['pedido','Pedido dem.'];if(rm.includes('DESLIG'))return['deslig','Desligamento'];return['out',rm];}
 function faixa(rm){return (rm||'').includes('MAIOR')?'Após 90d':(rm||'').includes('MENOR')?'Antes 90d':'—';}
 function renderList(){
-  let g=$('fGrupo').value, af=fa.value, mSel=mesSel(), hf=$('lHotel').value, cf=$('lCat').value, q=($('lBusca').value||'').toLowerCase();
+  let g=$('fGrupo').value, mSel=mesSel(), hf=$('lHotel').value, af=$('lArea').value, ff=$('lFaixa').value, tf=$('lTipo').value, cat=$('lCategoria').value, q=($('lBusca').value||'').toLowerCase();
   let rows=EV.filter(e=>{
-    if(cf==='conta' && !e.conta) return false;
+    if(cat==='conta'){ if(!e.conta) return false; }
+    else if(cat!=='todos'){ if(tagOf(e.rm)[1]!==cat) return false; }
     if(g!=='todos' && e.grupo!==g) return false;
     if(hf && e.hotel!==hf) return false;
-    if(af!=='geral' && e.area!==af) return false;
+    if(af && e.area!==af) return false;
+    if(ff && faixa(e.rm)!==ff) return false;
+    if(tf && e.tipo!==tf) return false;
     if(mSel!=='acum' && e.mi!==(+mSel)) return false;
     if(q && !((e.cargo||'').toLowerCase().includes(q)||(e.motivo||'').toLowerCase().includes(q)||(e.tipo||'').toLowerCase().includes(q))) return false;
     return true;
   });
   rows.sort((a,b)=>(a.mi-b.mi)||(a.hotel<b.hotel?-1:1));
-  $('lCount').textContent=rows.length+' evento(s) listado(s)'+(cf==='conta'?' que contam no Turn Over':'');
+  $('lCount').textContent=rows.length+' evento(s) listado(s)'+(cat==='conta'?' que contam no Turn Over':'');
   let head='<tr><th>Hotel</th><th>Área</th><th>Nome (Iniciais)</th><th>Cargo</th><th>Faixa</th><th>Tipo rescisão</th><th>Categoria</th></tr>';
   let body=rows.map(e=>{let t=tagOf(e.rm);
     return `<tr><td style="font-weight:600">${short(e.hotel)}</td><td>${e.area}</td><td style="text-align:left">${e.ini||''}</td><td style="text-align:left">${e.cargo||''}</td><td>${faixa(e.rm)}</td><td style="text-align:left;font-size:11.5px">${e.tipo||''}</td><td><span class="tag ${t[0]}">${t[1]}</span></td></tr>`;}).join('');
   $('lst').innerHTML=head+body;
 }
 ['fGrupo','fArea','fRec','fMes','fProj'].forEach(id=>$(id).addEventListener('change',render));
-['lHotel','lCat','lBusca'].forEach(id=>$(id).addEventListener('input',renderList));
+['lHotel','lArea','lFaixa','lTipo','lCategoria','lBusca'].forEach(id=>$(id).addEventListener('input',renderList));
 render();
 </script></body></html>
