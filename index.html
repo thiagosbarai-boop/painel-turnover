@@ -44,12 +44,20 @@ table.hm td.cell{width:60px;height:38px;text-align:center;border-radius:6px;font
 .legend summary{cursor:pointer;padding:10px 0;font-weight:600;color:var(--navy)}
 .legend>div{padding:0 2px 12px;line-height:1.75;color:#334}
 .legend b{color:var(--navy)}
+.cmp-row{display:grid;grid-template-columns:150px 1fr 76px;gap:10px;align-items:center;margin:8px 0}
+.cmp-name{font-size:12px;color:var(--navy);font-weight:600;text-align:right;line-height:1.15}
+.cmp-bars{display:flex;flex-direction:column;gap:3px}
+.cmp-track{position:relative;background:#eef2f7;border-radius:4px;height:16px;min-width:2px}
+.cmp-fill{height:100%;border-radius:4px;min-width:2px}
+.cmp-tag{position:absolute;left:7px;top:0;line-height:16px;font-size:10.5px;color:#12261a;font-weight:600;white-space:nowrap}
+.cmp-delta{font-weight:800;font-size:12.5px;text-align:right}
+select:disabled{opacity:.5}
 </style></head><body>
 <header><h1>Turn Over — Estanplaza / Gran Estanplaza / Estanconfor / Pulso</h1>
 <p><span id="perLbl">Janeiro–outubro 2026</span> &nbsp;•&nbsp; (Pedido de Demissão + Desligamento) ÷ Quadro de Pessoas</p></header>
 <div class="wrap">
   <div class="controls">
-    <div class="ctl"><label>Ano</label><select id="fAno"><option value="2026">2026</option><option value="2025">2025</option></select></div>
+    <div class="ctl"><label>Ano</label><select id="fAno"><option value="2026">2026</option><option value="2025">2025</option><option value="comp">Comparar 25 × 26</option></select></div>
     <div class="ctl"><label>Grupo</label><select id="fGrupo"><option value="todos">Todos</option><option value="estanplaza">Estanplaza + Pulso</option><option value="estanconfor">Estanconfor</option></select></div>
     <div class="ctl"><label>Área</label><select id="fArea"></select></div>
     <div class="ctl"><label>Recorte</label><select id="fRec"><option value="total">Total (Turn Over)</option><option value="geral">Geral (todas as saídas)</option><option value="apos">Após 90 dias</option><option value="antes">Antes de 90 dias</option></select></div>
@@ -70,7 +78,7 @@ table.hm td.cell{width:60px;height:38px;text-align:center;border-radius:6px;font
     <div class="card"><h2 id="tArea"></h2><div id="chArea"></div></div>
   </div>
   <div class="card"><h2 id="tMes"></h2><div id="chMes" class="msrow"></div><div class="note">Turn Over mensal = eventos do mês ÷ headcount.</div></div>
-  <div class="card"><h2 id="tHMam">Mapa de calor — Área × Mês</h2><div class="sub" id="subHMam"></div><div style="overflow:auto"><table class="hm" id="hmam"></table></div><div class="note">Sazonalidade de cada área ao longo dos meses.</div></div>
+  <div class="card" id="cardHMam"><h2 id="tHMam">Mapa de calor — Área × Mês</h2><div class="sub" id="subHMam"></div><div style="overflow:auto"><table class="hm" id="hmam"></table></div><div class="note">Sazonalidade de cada área ao longo dos meses.</div></div>
   <div class="card"><h2 id="tHM">Mapa de calor — Área × Hotel</h2><div class="sub" id="subHM"></div><div style="overflow:auto"><table class="hm" id="hm"></table></div>
     <div class="hmleg"><b>Turn Over:</b><span class="swatch" style="background:#e4f3e9"></span>&lt;25%<span class="swatch" style="background:#fbeed3"></span>25–40%<span class="swatch" style="background:#f0b8b1"></span>40–60%<span class="swatch" style="background:#c0392b"></span>≥60% &nbsp;·&nbsp; <b>*</b> = base pequena (≤3 colab.).</div></div>
   <div class="card"><h2>Lista de saídas</h2><div class="sub">Versão pública. Em vez do nome, as iniciais (primeiro nome + último sobrenome). O detalhamento nominal completo fica no Excel restrito.</div>
@@ -98,12 +106,13 @@ function buildListFilters(){
   let lt=$('lTipo'); lt.length=1; [...new Set(EV.map(e=>e.tipo).filter(Boolean))].sort().forEach(t=>{let o=document.createElement('option');o.value=t;o.textContent=t;lt.appendChild(o);});
 }
 function setYear(){
-  CUR=DATA.anos[$('fAno').value]; MESES=CUR.meses; EV=CUR.eventos; AM=CUR.area_mes; NM=MESES.length;
+  let yr=$('fAno').value, comp=(yr==='comp'), base=comp?'2026':yr;
+  CUR=DATA.anos[base]; MESES=CUR.meses; EV=CUR.eventos; AM=CUR.area_mes; NM=MESES.length;
   let fm=$('fMes'), prev=fm.value;
   fm.innerHTML='<option value="acum">Acumulado (Jan\u2013'+MESES[MESES.length-1]+')</option>'+MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
   fm.value=(prev==='acum'||(+prev)<NM)?prev:'acum';
-  let yr=$('fAno').value;
-  $('perLbl').textContent='Janeiro\u2013'+MFULL[MESES.length-1]+' '+yr;
+  $('fMes').disabled=comp; $('fProj').disabled=comp;
+  $('perLbl').textContent=comp?'2025 \u00d7 2026 \u2014 comparativo (jan\u2013out)':'Janeiro\u2013'+MFULL[MESES.length-1]+' '+yr;
   buildListFilters();
 }
 function hotels(){let g=$('fGrupo').value;return g==='todos'?CUR.estanplaza.concat(CUR.estanconfor):CUR[g];}
@@ -127,6 +136,9 @@ function fmt(v){return v==null?'—':(v*100).toFixed(1).replace('.',',')+'%';}
 function barChart(el,rows,mx){el.innerHTML=rows.map(x=>`<div class="bar-row"><div class="name">${x.name}</div><div class="track"><div class="fill" style="width:${((x.r||0)/mx*100).toFixed(1)}%;background:${colr(x.r)}"></div></div><div class="pct" style="color:${colr(x.r)}">${fmt(x.r)}</div></div>`).join('');}
 function grpLabel(){let g=$('fGrupo').value;return g==='todos'?'Rede':g==='estanplaza'?'Estanplaza + Pulso':'Estanconfor';}
 function render(){
+  if($('fAno').value==='comp'){renderCompare();return;}
+  $('cardHMam').style.display='';
+  $('chMes').style.gridTemplateColumns='repeat('+MESES.length+',1fr)';
   let area=fa.value, rec=$('fRec').value, arr=hotels(), recLbl={total:'Total (Turn Over)',geral:'Geral (todas as saídas)',apos:'Após 90 dias',antes:'Antes de 90 dias'}[rec];
   let rowsH=arr.map(h=>{let d=cell(h,area);return{name:short(h.hotel),r:rateM(d,rec),d};}).filter(x=>x.d.hc>0);
   let tn=rowsH.reduce((s,x)=>s+valN(x.d,rec),0), th=rowsH.reduce((s,x)=>s+x.d.hc,0);
@@ -185,6 +197,45 @@ function renderList(){
     return `<tr><td style="font-weight:600">${short(e.hotel)}</td><td>${e.area}</td><td style="text-align:left">${e.ini||''}</td><td style="text-align:left">${e.cargo||''}</td><td>${faixa(e.rm)}</td><td style="text-align:left;font-size:11.5px">${e.tipo||''}</td><td><span class="tag ${t[0]}">${t[1]}</span></td></tr>`;}).join('');
   $('lst').innerHTML=head+body;
 }
+function hotelsOfY(Y,g){return g==='todos'?Y.estanplaza.concat(Y.estanconfor):Y[g];}
+function cellY(h,area){return area==='geral'?h.geral:h.areas[area];}
+function sumJO(d,rec){let s=0;for(let mi=0;mi<10;mi++)s+=mOf(d,rec,mi);return s;}
+function fmtpp(d){if(d==null)return '—';let v=d*100;return (v>0?'+':'')+v.toFixed(1).replace('.',',')+' p.p.';}
+function dColor(d){if(d==null)return '#777';if(d<=-0.05)return '#1e7a3d';if(d<0)return '#2e9e5b';if(d===0)return '#777';if(d<0.05)return '#d99a2b';return '#c0392b';}
+function dBg(d){if(d==null)return '#eef2f7';if(d<=-0.05)return '#c6efce';if(d<0)return '#e4f3e9';if(d>=0.05)return '#f4cccc';if(d>0)return '#fbeed3';return '#eef2f7';}
+function cmpBar(el,rows){let mx=Math.max(0.08,...rows.map(x=>Math.max(x.r25||0,x.r26||0)))*1.05;
+  el.innerHTML=rows.map(x=>`<div class="cmp-row"><div class="cmp-name">${short(x.name)}</div><div class="cmp-bars"><div class="cmp-track"><div class="cmp-fill" style="width:${((x.r25||0)/mx*100).toFixed(1)}%;background:#9fb3c8"></div><span class="cmp-tag">25 · ${fmt(x.r25)}</span></div><div class="cmp-track"><div class="cmp-fill" style="width:${((x.r26||0)/mx*100).toFixed(1)}%;background:#0D2D4E"></div><span class="cmp-tag" style="color:#fff">26 · ${fmt(x.r26)}</span></div></div><div class="cmp-delta" style="color:${dColor(x.d)}">${fmtpp(x.d)}</div></div>`).join('');}
+function renderCompare(){
+  $('projNote').style.display='none'; $('cardHMam').style.display='none'; $('chMes').style.gridTemplateColumns='repeat(10,1fr)';
+  let g=$('fGrupo').value, rec=$('fRec').value, area=fa.value, recLbl={total:'Total (Turn Over)',geral:'Geral (todas as saídas)',apos:'Após 90 dias',antes:'Antes de 90 dias'}[rec], aLbl=area==='geral'?'Geral':area;
+  let Y25=DATA.anos['2025'], Y26=DATA.anos['2026'], H25=hotelsOfY(Y25,g), H26=hotelsOfY(Y26,g);
+  function rede(H){let n=0,h=0;H.forEach(ho=>{let d=cellY(ho,area);n+=sumJO(d,rec);h+=d.hc;});return{n,h,r:h?n/h:null};}
+  let R25=rede(H25),R26=rede(H26),dRede=(R25.r!=null&&R26.r!=null)?R26.r-R25.r:null;
+  let rowsH=H26.map((h26,i)=>{let h25=H25[i],d26=cellY(h26,area),d25=cellY(h25,area);let r25=d25.hc?sumJO(d25,rec)/d25.hc:null,r26=d26.hc?sumJO(d26,rec)/d26.hc:null;return{name:h26.hotel,r25,r26,d:(r25!=null&&r26!=null)?r26-r25:null};}).filter(x=>x.r25!=null||x.r26!=null);
+  let rowsA=AREAS.map(a=>{let n25=0,h25=0,n26=0,h26=0;H25.forEach(ho=>{n25+=sumJO(ho.areas[a],rec);h25+=ho.areas[a].hc;});H26.forEach(ho=>{n26+=sumJO(ho.areas[a],rec);h26+=ho.areas[a].hc;});let r25=h25?n25/h25:null,r26=h26?n26/h26:null;return{name:a,r25,r26,d:(r25!=null&&r26!=null)?r26-r25:null};});
+  let evo=rowsA.filter(x=>x.d!=null).sort((a,b)=>a.d-b.d), best=evo[0];
+  $('kpis').innerHTML=[['2025 — jan a out',fmt(R25.r),R25.n+' / '+R25.h+' colab.'],['2026 — jan a out',fmt(R26.r),R26.n+' / '+R26.h+' colab.'],['Variação',fmtpp(dRede),'verde = menos turnover'],['Maior queda',best?best.name:'—',best?fmtpp(best.d):'']].map((k,i)=>`<div class="kpi"><div class="lab">${k[0]}</div><div class="val" style="font-size:${String(k[1]).length>7?'17px':'26px'};color:${i===2?dColor(dRede):'var(--ink)'}">${k[1]}</div><div class="sub">${k[2]}</div></div>`).join('');
+  $('tHotel').textContent='Por hotel — 2025 × 2026 — '+aLbl+' — '+recLbl+' — jan–out';
+  cmpBar($('chHotel'),rowsH.slice().sort((a,b)=>(b.r26||0)-(a.r26||0)));
+  $('tArea').textContent='Por área — 2025 × 2026 — '+grpLabel()+' — '+recLbl+' — jan–out';
+  cmpBar($('chArea'),rowsA.slice().filter(x=>x.r25!=null||x.r26!=null).sort((a,b)=>(b.r26||0)-(a.r26||0)));
+  $('tMes').textContent='Mês a mês — 2025 × 2026 — '+grpLabel()+' — '+aLbl+' — '+recLbl;
+  let hc25=H25.reduce((s,h)=>s+cellY(h,area).hc,0), hc26=H26.reduce((s,h)=>s+cellY(h,area).hc,0);
+  let MN2=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out'],s25=[],s26=[];
+  for(let mi=0;mi<10;mi++){let n25=0,n26=0;H25.forEach(h=>n25+=mOf(cellY(h,area),rec,mi));H26.forEach(h=>n26+=mOf(cellY(h,area),rec,mi));s25.push(hc25?n25/hc25:0);s26.push(hc26?n26/hc26:0);}
+  let mmx=Math.max(0.05,...s25,...s26);
+  $('chMes').innerHTML=MN2.map((m,i)=>`<div class="mscol"><div style="display:flex;gap:4px;align-items:flex-end;justify-content:center;height:90px"><div title="2025" style="height:${(s25[i]/mmx*100).toFixed(1)}%;width:12px;background:#9fb3c8;border-radius:3px 3px 0 0"></div><div title="2026" style="height:${(s26[i]/mmx*100).toFixed(1)}%;width:12px;background:#0D2D4E;border-radius:3px 3px 0 0"></div></div><div class="mslab" style="margin-top:4px">${m}<br><span style="color:#9fb3c8">${fmt(s25[i])}</span> <span style="color:#0D2D4E">${fmt(s26[i])}</span></div></div>`).join('');
+  $('subHMam');
+  $('subHM').textContent=grpLabel()+' — '+recLbl+' — Δ (p.p.) de 2025 para 2026 por área em cada hotel (jan–out). Verde = melhorou (menos turnover), vermelho = piorou.';
+  let head='<tr><th></th>'+AREAS.map(a=>`<th class="hcol">${a}</th>`).join('')+'<th class="hcol" style="color:var(--navy)">Geral</th></tr>';
+  let body=H26.map((h26,i)=>{let h25=H25[i];
+    let tds=AREAS.map(a=>{let d26=h26.areas[a],d25=h25.areas[a],r25=d25.hc?sumJO(d25,rec)/d25.hc:null,r26=d26.hc?sumJO(d26,rec)/d26.hc:null,dd=(r25!=null&&r26!=null)?r26-r25:null;return `<td class="cell" title="${short(h26.hotel)} · ${a}\n2025 ${fmt(r25)} → 2026 ${fmt(r26)}" style="background:${dBg(dd)};color:#12261a;font-size:11px">${dd==null?'—':fmtpp(dd).replace(' p.p.','')}</td>`;}).join('');
+    let g25=h25.geral,g26=h26.geral,r25=g25.hc?sumJO(g25,rec)/g25.hc:null,r26=g26.hc?sumJO(g26,rec)/g26.hc:null,dd=(r25!=null&&r26!=null)?r26-r25:null;
+    return `<tr><td class="h">${short(h26.hotel)}</td>${tds}<td class="cell" title="2025 ${fmt(r25)} → 2026 ${fmt(r26)}" style="background:${dBg(dd)};font-weight:800;outline:2px solid #fff;font-size:11px">${dd==null?'—':fmtpp(dd).replace(' p.p.','')}</td></tr>`;}).join('');
+  $('hm').innerHTML=head+body;
+  renderList();
+}
+
 ['fGrupo','fArea','fRec','fMes','fProj'].forEach(id=>$(id).addEventListener('change',render));
 $('fAno').addEventListener('change',()=>{setYear();render();});
 ['lHotel','lArea','lFaixa','lTipo','lCategoria','lBusca'].forEach(id=>$(id).addEventListener('input',renderList));
